@@ -1,7 +1,8 @@
 {
   "compilerOptions": {
-    "target": "ES2019",
-    "module": "commonjs",
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "nodenext",
     "strict": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
@@ -9,13 +10,12 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "outDir": "./dist",
-    "rootDir": "./",
     "skipDefaultLibCheck": true,
     "noEmitOnError": true,
     "incremental": true,
     "typeRoots": ["./src/types", "./node_modules/@types", "./src"],
     "types": ["node", "express"]
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["./**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }
