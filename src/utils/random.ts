@@ -1,14 +1,14 @@
 const bip39 = require("bip39");
 import crypto from "crypto";
 
-function generateRandomString(length: number) {
-  const randomBytes = crypto.randomBytes(length);
-  return crypto
-    .createHash("sha256")
-    .update(randomBytes)
-    .digest("hex")
-    .substring(0, length);
-}
+// function generateRandomString(length: number) {
+//   const randomBytes = crypto.randomBytes(length);
+//   return crypto
+//     .createHash("sha256")
+//     .update(randomBytes)
+//     .digest("hex")
+//     .substring(0, length);
+// }
 
 function generateOtp(length: number) {
   let randomSixDigitCharacter = "";
@@ -50,12 +50,17 @@ const generateMnemonic = () => {
   return mnemonic;
 };
 
+function generateRandomInt(min: number, max: number, exclude: number): number {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
 export {
   generateHash,
   generateMnemonic,
   generateOtp,
+  generateRandomInt,
   generateRandomNumbers,
-  generateRandomString,
+  // generateRandomString,
   generateSecretKey,
   getRandomNumber,
 };

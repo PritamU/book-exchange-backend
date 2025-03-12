@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import { validationResult } from "express-validator";
 import createHttpError from "http-errors";
-import { ErrorCodes } from "../../constants/errorCodes";
+import { StatusCodes } from "http-status-codes";
+import { sortValueEnum } from "../../types/commonTypes";
 import {
   arrayValidate,
   enumValidate,
@@ -15,7 +16,7 @@ const validationHandler = (req: Request, res: Response, next: NextFunction) => {
   if (!errors.isEmpty()) {
     const errorMessage = errors.array()[0].msg;
     console.log("errorMessage", errorMessage);
-    return next(createHttpError(ErrorCodes.validation_failed, errorMessage));
+    return next(createHttpError(StatusCodes.NOT_ACCEPTABLE, errorMessage));
   }
   next();
 };
@@ -25,7 +26,7 @@ const basicPaginationHandler = () => {
     intValidate("query", "page", true)!,
     intValidate("query", "limit", true)!,
     stringValidate("query", "sortField", true)!,
-    enumValidate("query", "sortValue", true, [-1, 1, "-1", "1"])!.toInt()!,
+    enumValidate("query", "sortValue", true, sortValueEnum)!.toInt()!,
   ];
 };
 

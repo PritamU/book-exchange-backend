@@ -1,11 +1,10 @@
 import { Response } from "express";
 import jwt from "jsonwebtoken";
-import { SESSION_MINUTES } from "../constants/common";
-import { AdminTokenPayload } from "../interfaces/primary/entityInterfaces/adminInterfaces";
-
-interface UserJwtTokenPayload extends AdminTokenPayload {
-  exp?: number;
-}
+import {
+  LOGIN_COOKIE_LONG_SESSION_DURATION,
+  LOGIN_COOKIE_SHORT_SESSION_DURATION,
+} from "../constants/common";
+import { JwtPayloadInterface } from "../types/commonTypes";
 
 interface CookieOptions {
   httpOnly?: boolean;
@@ -24,10 +23,10 @@ export const setCookieHandler = (
 ) => {
   let isDev = process.env.APP_ENV === "dev" ? true : false;
 
-  let expiryTime = 28 * 24 * 60 * 60 * 1000;
+  let expiryTime = LOGIN_COOKIE_LONG_SESSION_DURATION * 24 * 60 * 60 * 1000;
 
   if (duration === "short") {
-    expiryTime = SESSION_MINUTES * 60 * 60 * 1000;
+    expiryTime = LOGIN_COOKIE_SHORT_SESSION_DURATION * 60 * 60 * 1000;
   }
 
   const secureCookieOptions: CookieOptions = {
@@ -41,7 +40,7 @@ export const setCookieHandler = (
   res.cookie(name, value, secureCookieOptions);
 };
 
-export const generateJwtToken = (payload: UserJwtTokenPayload) => {
+export const generateJwtToken = (payload: JwtPayloadInterface) => {
   const JWT_TOKEN_SECRET: string = process.env.JWT_SECRET!; // telling ts that value of this string will never be null to avoid error.
   const iat = Math.floor(Date.now() / 1000);
   payload.exp = iat + 2630000;

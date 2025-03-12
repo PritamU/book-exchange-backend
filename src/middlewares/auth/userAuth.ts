@@ -1,130 +1,53 @@
-// import { NextFunction, RequestHandler, Response } from "express";
-// import createHttpError from "http-errors";
-// import jwt from "jsonwebtoken";
-// import { ErrorCodes } from "../../constants/errorCodes";
-// import { CustomRequest } from "../../interfaces/primary/common";
-// import { errorHandler } from "../../utils/errorHandler";
+import { NextFunction, Request, Response } from "express-serve-static-core";
+import createHttpError from "http-errors";
+import { StatusCodes } from "http-status-codes";
+import jwt from "jsonwebtoken";
+import { MEMBER_COOKIE_NAME } from "../../constants/common";
+import { Member } from "../../models/entityModels/memberModel";
 
-// // check authentication for user
-// const userAuthMiddleware: RequestHandler = async (
-//   req: CustomRequest,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     console.log("here");
-//     let token =
-//       req.cookies["user.sid"] || req.headers["authorization"]?.split(" ")[1];
+// check authentication for user
+const userAuthMiddleware = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    console.log("here");
+    let token = req.cookies[MEMBER_COOKIE_NAME];
 
-//     if (!token) {
-//       return next(
-//         createHttpError(ErrorCodes.unauthenticated, "Login Required!")
-//       );
-//     }
+    if (!token) {
+      return next(createHttpError(StatusCodes.UNAUTHORIZED, "Login Required!"));
+    }
 
-//     // Verify the token and extract the payload
-//     jwt.verify(token, process.env.JWT_SECRET!, (err, decoded) => {
-//       if (err) {
-//         return next(
-//           createHttpError(ErrorCodes.unauthenticated, "Invalid Token!")
-//         );
-//       }
-//       // Token verification successful, decoded contains the payload
-//       req.user = decoded;
-//     });
+    // Verify the token and extract the payload
+    jwt.verify(token, process.env.JWT_SECRET!, (err, decoded) => {
+      if (err) {
+        return next(
+          createHttpError(StatusCodes.UNAUTHORIZED, "Invalid Token!")
+        );
+      }
+      // Token verification successful, decoded contains the payload
+      req.user = decoded;
+    });
 
-//     let userId: string = req.user._id as string;
+    let userId: string = req.user!.id as string;
 
-//     //fetch admin data
-//     let user = await req.models?.userModel
-//       .findOne({
-//         _id: userId,
-//       })
-//       .select("status")
-//       .lean();
+    //fetch admin data
+    let user = await Member.count({
+      where: { id: userId },
+    });
 
-//     // return error if admin data not found
-//     if (!user) {
-//       return next(
-//         createHttpError(ErrorCodes.unauthenticated, "User Credentials Invalid!")
-//       );
-//     }
+    // return error if admin data not found
+    if (user === 0) {
+      return next(
+        createHttpError(StatusCodes.FORBIDDEN, "User Credentials Invalid!")
+      );
+    }
+  } catch (e: any) {
+    return next(createHttpError(StatusCodes.INTERNAL_SERVER_ERROR, e.message));
+  } finally {
+    return next();
+  }
+};
 
-//     let { status } = user;
-
-//     // return error if user is deleted
-//     if (!status) {
-//       return next(
-//         createHttpError(
-//           ErrorCodes.unauthorized,
-//           "Your Account Has Been Blocked!"
-//         )
-//       );
-//     }
-//   } catch (e: any) {
-//     errorHandler(e, res, next);
-//   } finally {
-//     return next();
-//   }
-// };
-// // check optional authentication for user
-// const userOptionalAuthMiddleware: RequestHandler = async (
-//   req: CustomRequest,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   try {
-//     let token =
-//       req.cookies["user.sid"] || req.headers["authorization"]?.split(" ")[1];
-
-//     if (!token) {
-//       return;
-//     }
-
-//     // Verify the token and extract the payload
-//     jwt.verify(token, process.env.JWT_SECRET!, (err, decoded) => {
-//       if (err) {
-//         return next(
-//           createHttpError(ErrorCodes.unauthenticated, "Invalid Token!")
-//         );
-//       }
-//       // Token verification successful, decoded contains the payload
-//       req.user = decoded;
-//     });
-
-//     let userId: string = req.user._id as string;
-
-//     //fetch admin data
-//     let user = await req.models?.userModel
-//       .findOne({
-//         _id: userId,
-//       })
-//       .select("status")
-//       .lean();
-
-//     // return error if admin data not found
-//     if (!user) {
-//       return next(
-//         createHttpError(ErrorCodes.unauthenticated, "User Credentials Invalid!")
-//       );
-//     }
-
-//     let { status } = user;
-
-//     // return error if user is deleted
-//     if (!status) {
-//       return next(
-//         createHttpError(
-//           ErrorCodes.unauthorized,
-//           "Your Account Has Been Blocked!"
-//         )
-//       );
-//     }
-//   } catch (e: any) {
-//     errorHandler(e, res, next);
-//   } finally {
-//     return next();
-//   }
-// };
-
-// export { userAuthMiddleware, userOptionalAuthMiddleware };
+export { userAuthMiddleware };

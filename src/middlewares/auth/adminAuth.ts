@@ -1,152 +1,133 @@
-// import { NextFunction, RequestHandler, Response } from "express";
-// import createHttpError from "http-errors";
-// import jwt from "jsonwebtoken";
-// import { ErrorCodes } from "../../constants/errorCodes";
-// import { CustomRequest } from "../../interfaces/primary/common";
-// import { PermissionDB } from "../../interfaces/primary/entityInterfaces/adminInterfaces";
-// import { errorHandler } from "../../utils/errorHandler";
+import {
+  NextFunction,
+  Request,
+  RequestHandler,
+  Response,
+} from "express-serve-static-core";
+import createHttpError from "http-errors";
+import { StatusCodes } from "http-status-codes";
+import jwt from "jsonwebtoken";
+import { ADMIN_COOKIE_NAME } from "../../constants/common";
+import { Admin } from "../../models/entityModels/adminModel";
+import { Permission } from "../../types/entityTypes/adminTypes";
 
-// //check if its admin
-// const adminCheck = async (
-//   req: CustomRequest,
-//   res: Response,
-//   next: NextFunction,
-//   accessType: "read" | "write" | "auth"
-// ) => {
-//   try {
-//     interface AdminUser {
-//       name: string;
-//       _id: string;
-//     }
+//check if its admin
+const adminCheck = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+  accessType: "read" | "write" | "auth"
+) => {
+  try {
+    let token = req.cookies[ADMIN_COOKIE_NAME];
 
-//     let token =
-//       req.cookies["connect.sid"] || req.headers["authorization"]?.split(" ")[1];
+    if (!token) {
+      return next(createHttpError(StatusCodes.UNAUTHORIZED, "Login Required!"));
+    }
 
-//     if (!token) {
-//       return next(
-//         createHttpError(ErrorCodes.unauthenticated, "Login Required!")
-//       );
-//     }
+    // Verify the token and extract the payload
+    jwt.verify(token, process.env.JWT_SECRET!, (err, decoded) => {
+      if (err) {
+        return next(
+          createHttpError(StatusCodes.UNAUTHORIZED, "Invalid Token!")
+        );
+      }
+      // Token verification successful, decoded contains the payload
+      req.user = decoded;
+    });
 
-//     // Verify the token and extract the payload
-//     jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-//       if (err) {
-//         return next(
-//           createHttpError(ErrorCodes.unauthenticated, "Invalid Token!")
-//         );
-//       }
-//       // Token verification successful, decoded contains the payload
-//       req.user = decoded;
-//     });
+    let admin = req.user;
 
-//     let admin = req.user;
+    let { id: adminId } = admin || {};
 
-//     let { _id: adminId } = admin || {};
+    //fetch admin data
+    let adminData = await Admin.findOne({
+      where: { id: adminId },
+      attributes: ["permissions", "status"],
+      raw: true,
+    });
 
-//     let adminModel = req.models.adminModel;
+    // return error if admin data not found
+    if (!adminData) {
+      return next(
+        createHttpError(StatusCodes.UNAUTHORIZED, "Admin Credentials Invalid!")
+      );
+    }
 
-//     //fetch admin data
-//     let adminData = await adminModel
-//       .findOne({
-//         _id: adminId,
-//       })
-//       .select("deleted permissions")
-//       .lean();
+    let { status, permissions } = adminData;
 
-//     // return error if admin data not found
-//     if (!adminData) {
-//       return next(
-//         createHttpError(
-//           ErrorCodes.unauthenticated,
-//           "Admin Credentials Invalid!"
-//         )
-//       );
-//     }
+    // return error if admin is deleted
+    if (!status) {
+      return next(
+        createHttpError(
+          StatusCodes.FORBIDDEN,
+          "Your Current Admin Credentials Has been Disabled!"
+        )
+      );
+    }
 
-//     let { deleted, permissions } = adminData;
+    // check if admin has access to this path
+    let path = req.originalUrl;
+    let isAllowed = permissions?.some((permission: Permission) => {
+      let { route, read, write } = permission;
+      if (!path.includes(`/${route}`)) {
+        return false;
+      }
 
-//     // return error if admin is deleted
-//     if (deleted) {
-//       return next(
-//         createHttpError(
-//           ErrorCodes.unauthorized,
-//           "Your Current Admin Credentials Has been Disabled!"
-//         )
-//       );
-//     }
+      if (accessType === "read") {
+        return read;
+      }
+      if (accessType === "write") {
+        return write;
+      }
+    });
 
-//     // check if admin has access to this path
-//     let path = req.originalUrl;
-//     let isAllowed = permissions?.some((permission: PermissionDB) => {
-//       let { route, read, write } = permission;
-//       if (!path.includes(`/${route}`)) {
-//         return false;
-//       }
+    // allow everytime if it's auth path
+    if (path.includes("/admin/auth") || path.includes("/admin/logout")) {
+      isAllowed = true;
+    }
 
-//       if (accessType === "read") {
-//         return read;
-//       }
-//       if (accessType === "write") {
-//         return write;
-//       }
-//     });
+    // return error if admin does not have access
+    if (!isAllowed) {
+      return next(
+        createHttpError(
+          StatusCodes.FORBIDDEN,
+          "You do not have access to perform this action!"
+        )
+      );
+    }
+  } catch (e: any) {
+    return next(createHttpError(StatusCodes.INTERNAL_SERVER_ERROR, e.message));
+  } finally {
+    return next();
+  }
+};
 
-//     // allow everytime if it's auth path
-//     if (path.includes("/admin/auth")) {
-//       isAllowed = true;
-//     }
+//check if its admin read request
+const readAdminCheck = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  adminCheck(req, res, next, "read");
+};
 
-//     // return error if admin does not have access
-//     if (!isAllowed) {
-//       return next(
-//         createHttpError(
-//           ErrorCodes.unauthorized,
-//           "You do not have access to perform this action!"
-//         )
-//       );
-//     }
-//   } catch (e: any) {
-//     errorHandler(e, res, next);
-//   } finally {
-//     return next();
-//   }
-// };
+//check if its admin read request
+const writeAdminCheck: RequestHandler = async (
+  req,
+  res: Response,
+  next: NextFunction
+) => {
+  adminCheck(req, res, next, "write");
+};
 
-// //check if its admin read request
-// const readAdminCheck = async (
-//   req: CustomRequest,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   adminCheck(req, res, next, "read");
-// };
+//check if its admin read request
+const adminAuthCheck = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  adminCheck(req, res, next, "auth");
+};
 
-// //check if its admin read request
-// const writeAdminCheck: RequestHandler = async (
-//   req,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   adminCheck(req, res, next, "write");
-// };
-
-// //check if its admin read request
-// const adminAuthCheck = async (
-//   req: CustomRequest,
-//   res: Response,
-//   next: NextFunction
-// ) => {
-//   adminCheck(req, res, next, "auth");
-// };
-
-// const checkAdminForSocket = (cookie: string) => {
-//   // Verify the token and extract the payload
-//   jwt.verify(cookie, process.env.JWT_SECRET, (err, decoded) => {
-//     if (err) {
-//       throw new Error("Invalid Login Credentials!");
-//     }
-//     // Token verification successful, decoded contains the payload
-//   });
-// };
-
-// export { adminAuthCheck, checkAdminForSocket, readAdminCheck, writeAdminCheck };
+export { adminAuthCheck, readAdminCheck, writeAdminCheck };
