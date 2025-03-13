@@ -36,7 +36,7 @@ export class Exchange extends Model<Exchange, ExchangeInterface> {
   memberCount!: number;
 
   @Column({
-    type: DataType.ENUM("in-progress", "completed"),
+    type: DataType.ENUM("initiated", "in-progress", "completed", "cancelled"),
     allowNull: false,
     defaultValue: "in-progress",
   })
