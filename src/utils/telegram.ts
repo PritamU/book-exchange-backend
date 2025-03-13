@@ -1,5 +1,27 @@
 import { MemberInfoFieldInterface } from "../types/entityTypes/memberTypes";
 
+const sendWelcomeMessage = async (chatId: string, username: string) => {
+  const res = await fetch(
+    `https://api.telegram.org/${process.env.TELEGRAM_API_KEY}/sendMessage`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        chat_id: chatId!,
+        text: `Hi ${username}!\n\nWe're Excited to have you here\n\nYours Truly,\nuwuBot`,
+        parse_mode: "html",
+      }),
+    }
+  );
+  const resData: { ok: boolean; description: string } = await res.json();
+  console.log("resData", resData);
+  if (!resData.ok) {
+    throw new Error(resData.description);
+  }
+};
+
 const sendExchangeCreationAlertMessage = async () => {
   const res = await fetch(
     `https://api.telegram.org/${process.env.TELEGRAM_API_KEY}/sendMessage`,
@@ -90,4 +112,5 @@ export {
   sendExchangeCancellationAlertMessage,
   sendExchangeCreationAlertMessage,
   sendReceiverDetails,
+  sendWelcomeMessage,
 };

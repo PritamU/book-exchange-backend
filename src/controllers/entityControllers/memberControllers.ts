@@ -21,6 +21,7 @@ import { generateJwtToken, setCookieHandler } from "../../utils/cookieHandler";
 import { getHasNext, paginationSortHandler } from "../../utils/paginationUtils";
 import { decryptPassword, encryptPassword } from "../../utils/passwordHandler";
 import { generateRandomSlug } from "../../utils/slugHandler";
+import { sendWelcomeMessage } from "../../utils/telegram";
 
 // create new member
 const createMember = async (
@@ -448,6 +449,7 @@ const telegramWebhook = async (
     member.set("telegramChatId", chat.id);
 
     await member.save();
+    await sendWelcomeMessage(chat.id, chat.username);
 
     let returnObject: BasicResponseInterface = {
       status: true,
