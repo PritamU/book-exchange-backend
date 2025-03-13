@@ -1,12 +1,11 @@
 import { Column, DataType, Model, Table } from "sequelize-typescript";
 import {
   MemberInfoFieldInterface,
-  MemberInterface,
   MemberStatusTypes,
 } from "../../types/entityTypes/memberTypes";
 
 @Table({ tableName: "members", timestamps: true })
-export class Member extends Model<Member, MemberInterface> {
+export class Member extends Model<Member> {
   @Column({
     type: DataType.STRING,
     primaryKey: true,

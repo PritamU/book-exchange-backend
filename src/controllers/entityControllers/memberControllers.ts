@@ -452,6 +452,7 @@ const telegramWebhook = async (
     console.log("filterObject", filterObject);
 
     let member = await Member.findOne(filterObject);
+
     console.log("member", member);
 
     if (!member) {
