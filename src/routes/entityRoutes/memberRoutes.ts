@@ -139,6 +139,6 @@ router.get(
 );
 
 // telegram webhook
-router.post("/telgram-webhook", telegramWebhook);
+router.post("/telegram-webhook", telegramWebhook);
 
 export default router;
