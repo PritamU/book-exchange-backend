@@ -461,6 +461,8 @@ const telegramWebhook = async (
 
     member.telegramChatId = chat.id;
 
+    console.log("member after", member);
+
     await member.save();
 
     let returnObject: BasicResponseInterface = {
