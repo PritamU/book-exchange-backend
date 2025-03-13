@@ -414,6 +414,8 @@ const telegramWebhook = async (
   try {
     let { chat } = req.body;
 
+    console.log("req.body", req.body);
+
     let member = await Member.findOne({
       where: { "userInformation.telegramUsername": chat.username },
     });
