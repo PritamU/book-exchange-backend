@@ -78,7 +78,10 @@ const adminLogin = async (
       password: string;
     } = req.body;
 
-    let admin = await Admin.findOne({ where: { username: username } });
+    let admin = await Admin.findOne({
+      where: { username: username },
+      raw: true,
+    });
 
     if (!admin) {
       return next(createHttpError(StatusCodes.NOT_FOUND, "Admin Not Found!"));
@@ -95,7 +98,10 @@ const adminLogin = async (
       );
     }
 
+    console.log("before");
+
     let isPasswordCorrect = await comparePassword(password, hashedPassword);
+    console.log("after");
 
     if (!isPasswordCorrect) {
       return next(
