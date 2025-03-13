@@ -424,9 +424,7 @@ const telegramWebhook = async (
         userInformation: {
           [Op.contains]: { fieldId: string; value: string }[];
         };
-        telegramChatId: {
-          [Op.not]: null;
-        };
+        telegramChatId: null;
       };
     }
 
@@ -437,9 +435,7 @@ const telegramWebhook = async (
             { fieldId: "telegramUsername", value: chat.username },
           ],
         },
-        telegramChatId: {
-          [Op.not]: null,
-        },
+        telegramChatId: null,
       },
     };
 
