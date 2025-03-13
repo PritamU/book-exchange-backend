@@ -80,7 +80,10 @@ const memberLogin = async (
       password: string;
     } = req.body;
 
-    let member = await Member.findOne({ where: { username: username } });
+    let member = await Member.findOne({
+      where: { username: username },
+      raw: true,
+    });
 
     if (!member) {
       return next(createHttpError(StatusCodes.NOT_FOUND, "Member Not Found!"));
@@ -275,6 +278,7 @@ const fetchMembers = async (
       where: {},
       order: sortArray,
       attributes: { exclude: ["password"] },
+      raw: true,
     };
 
     if (status) {

@@ -191,6 +191,7 @@ const fetchAdmins = async (
       where: {},
       order: sortArray,
       attributes: { exclude: ["password"] },
+      raw: true,
     };
 
     if (status !== undefined) {
