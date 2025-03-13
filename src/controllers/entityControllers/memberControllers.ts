@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express-serve-static-core";
 import createHttpError from "http-errors";
 import { StatusCodes } from "http-status-codes";
-import { Op } from "sequelize";
+import { FindOptions, Op } from "sequelize";
 import { MEMBER_COOKIE_NAME } from "../../constants/common";
 import { Member } from "../../models/entityModels/memberModel";
 import {
@@ -421,9 +421,35 @@ const telegramWebhook = async (
 
     console.log("req.body", req.body);
 
-    let member = await Member.findOne({
-      where: { "userInformation.telegramUsername": chat.username },
-    });
+    // let member = await Member.findOne({
+    //   where: {
+    //     userInformation: {
+    //       [Op.contains]: [
+    //         { fieldId: "telegramUsername", value: chat.username },
+    //       ],
+    //     },
+    //   },
+    // });
+
+    interface FilterInterface extends FindOptions {
+      where?: {
+        userInformation: {
+          [Op.contains]: { fieldId: string; value: string }[];
+        };
+      };
+    }
+
+    let filterObject: FilterInterface = {
+      where: {
+        userInformation: {
+          [Op.contains]: [
+            { fieldId: "telegramUsername", value: chat.username },
+          ],
+        },
+      },
+    };
+
+    let member = await Member.findOne(filterObject);
 
     if (!member) {
       throw new Error("No Member Found");
