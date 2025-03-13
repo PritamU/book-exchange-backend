@@ -419,22 +419,13 @@ const telegramWebhook = async (
   try {
     let { chat } = req.body.message;
 
-    console.log("req.body", req.body);
-
-    // let member = await Member.findOne({
-    //   where: {
-    //     userInformation: {
-    //       [Op.contains]: [
-    //         { fieldId: "telegramUsername", value: chat.username },
-    //       ],
-    //     },
-    //   },
-    // });
-
     interface FilterInterface extends FindOptions {
       where?: {
         userInformation: {
           [Op.contains]: { fieldId: string; value: string }[];
+        };
+        telegramChatId: {
+          [Op.not]: null;
         };
       };
     }
@@ -446,22 +437,19 @@ const telegramWebhook = async (
             { fieldId: "telegramUsername", value: chat.username },
           ],
         },
+        telegramChatId: {
+          [Op.not]: null,
+        },
       },
     };
 
-    console.log("filterObject", filterObject);
-
     let member = await Member.findOne(filterObject);
-
-    console.log("member", member);
 
     if (!member) {
       throw new Error("No Member Found");
     }
 
     member.set("telegramChatId", chat.id);
-
-    console.log("member after", member);
 
     await member.save();
 
