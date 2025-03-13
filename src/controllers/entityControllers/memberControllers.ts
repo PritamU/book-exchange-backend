@@ -459,7 +459,7 @@ const telegramWebhook = async (
       throw new Error("No Member Found");
     }
 
-    member.telegramChatId = chat.id;
+    member.set("telegramChatId", chat.id);
 
     console.log("member after", member);
 
