@@ -407,12 +407,17 @@ const fetchMemberLoginCredentials = async (
 
 // telegram webhook
 const telegramWebhook = async (
-  req: Request<{}, {}, { chat: { id: string; username: string } }, {}>,
+  req: Request<
+    {},
+    {},
+    { message: { chat: { id: string; username: string } } },
+    {}
+  >,
   res: Response<BasicResponseInterface>,
   next: NextFunction
 ) => {
   try {
-    let { chat } = req.body;
+    let { chat } = req.body.message;
 
     console.log("req.body", req.body);
 
